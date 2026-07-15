@@ -9,6 +9,9 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Chip from '@mui/material/Chip';
+import InputAdornment from '@mui/material/InputAdornment';
+import SearchOutlined from '@mui/icons-material/SearchOutlined';
+import PhoneOutlined from '@mui/icons-material/PhoneOutlined';
 import { fetchClients } from '@/api/clients-api';
 import { DealStageChip } from '@/components/common/deal-stage-chip';
 import { PageHeader } from '@/components/common/page-header';
@@ -44,7 +47,22 @@ export function ClientsListPage() {
         title="My clients"
         subtitle={`${clients.length} shops in your area`}
         action={
-          <TextField size="small" placeholder="Search shops…" value={search} onChange={(e) => setSearch(e.target.value)} sx={{ width: 260 }} />
+          <TextField
+            size="small"
+            placeholder="Search shops…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ width: 260 }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
         }
       />
 
@@ -77,9 +95,12 @@ export function ClientsListPage() {
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                     {client.businessType} · {client.contactPerson}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {client.mobile}
-                  </Typography>
+                  <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', mt: 0.25 }}>
+                    <PhoneOutlined sx={{ fontSize: 14, color: 'text.secondary' }} />
+                    <Typography variant="caption" color="text.secondary">
+                      {client.mobile}
+                    </Typography>
+                  </Stack>
                   <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
                     <Typography variant="caption" color="text.secondary">
                       Last updated {formatRelativeDate(client.updatedAt)}

@@ -12,6 +12,8 @@ import Typography from '@mui/material/Typography';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { useTheme } from '@mui/material/styles';
+import MapOutlined from '@mui/icons-material/MapOutlined';
+import ViewListOutlined from '@mui/icons-material/ViewListOutlined';
 import { fetchClients } from '@/api/clients-api';
 import { DealStageChip } from '@/components/common/deal-stage-chip';
 import { PageHeader } from '@/components/common/page-header';
@@ -34,8 +36,14 @@ export function AreaMapPage() {
         subtitle={`${clients.length} shops · Andheri West`}
         action={
           <ToggleButtonGroup size="small" exclusive value={view} onChange={(_, next) => next && setView(next)}>
-            <ToggleButton value="map">Map</ToggleButton>
-            <ToggleButton value="list">List</ToggleButton>
+            <ToggleButton value="map" sx={{ gap: 0.5 }}>
+              <MapOutlined sx={{ fontSize: 18 }} />
+              Map
+            </ToggleButton>
+            <ToggleButton value="list" sx={{ gap: 0.5 }}>
+              <ViewListOutlined sx={{ fontSize: 18 }} />
+              List
+            </ToggleButton>
           </ToggleButtonGroup>
         }
       />

@@ -5,10 +5,19 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import SpaceDashboardOutlined from '@mui/icons-material/SpaceDashboardOutlined';
+import StorefrontOutlined from '@mui/icons-material/StorefrontOutlined';
+import EventNoteOutlined from '@mui/icons-material/EventNoteOutlined';
+import NotificationsNoneOutlined from '@mui/icons-material/NotificationsNoneOutlined';
+import MapOutlined from '@mui/icons-material/MapOutlined';
+import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
+import FilterAltOutlined from '@mui/icons-material/FilterAltOutlined';
+import LogoutOutlined from '@mui/icons-material/LogoutOutlined';
 import { useAuthStore } from '@/store/auth-store';
 import { logout as logoutRequest } from '@/api/auth-api';
 import { Logo } from '@/components/common/logo';
@@ -16,16 +25,16 @@ import { Logo } from '@/components/common/logo';
 const DRAWER_WIDTH = 240;
 
 const WORKSPACE_LINKS = [
-  { to: '/', label: 'Dashboard', exact: true },
-  { to: '/clients', label: 'My clients' },
-  { to: '/visits', label: 'Visits' },
-  { to: '/follow-ups', label: 'Follow-ups' },
-  { to: '/area-map', label: 'Area map' },
+  { to: '/', label: 'Dashboard', exact: true, icon: SpaceDashboardOutlined },
+  { to: '/clients', label: 'My clients', icon: StorefrontOutlined },
+  { to: '/visits', label: 'Visits', icon: EventNoteOutlined },
+  { to: '/follow-ups', label: 'Follow-ups', icon: NotificationsNoneOutlined },
+  { to: '/area-map', label: 'Area map', icon: MapOutlined },
 ];
 
 const REPORTS_LINKS = [
-  { to: '/reports/performance', label: 'My performance' },
-  { to: '/reports/pipeline', label: 'Pipeline', roles: ['MANAGER', 'ADMIN'] },
+  { to: '/reports/performance', label: 'My performance', icon: TrendingUpOutlined },
+  { to: '/reports/pipeline', label: 'Pipeline', icon: FilterAltOutlined, roles: ['MANAGER', 'ADMIN'] },
 ];
 
 export function AppShell() {
@@ -87,6 +96,7 @@ export function AppShell() {
           <Button
             variant="outlined"
             size="small"
+            startIcon={<LogoutOutlined sx={{ fontSize: 16 }} />}
             onClick={handleLogout}
             sx={{ borderColor: 'sidebar.textSecondary', color: 'sidebar.text', '&:hover': { borderColor: 'sidebar.text' } }}
           >
@@ -113,6 +123,7 @@ function NavSection({ title, links, currentPath }) {
       <List dense disablePadding>
         {links.map((link) => {
           const isActive = link.exact ? currentPath === link.to : currentPath.startsWith(link.to);
+          const Icon = link.icon;
           return (
             <ListItemButton
               key={link.to}
@@ -128,6 +139,9 @@ function NavSection({ title, links, currentPath }) {
                 '&:hover': { bgcolor: 'sidebar.activeBackground' },
               }}
             >
+              <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+                <Icon sx={{ fontSize: 20 }} />
+              </ListItemIcon>
               <ListItemText slotProps={{ primary: { variant: 'body2', fontWeight: isActive ? 600 : 400 } }}>
                 {link.label}
               </ListItemText>

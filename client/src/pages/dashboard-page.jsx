@@ -5,13 +5,7 @@ import { fetchDashboard } from '@/api/reports-api';
 import { useAuthStore } from '@/store/auth-store';
 import { PageHeader } from '@/components/common/page-header';
 import { StatCard } from '@/components/common/stat-card';
-
-const STAT_TILES = [
-  { key: 'visitsThisWeek', label: 'Visits this week' },
-  { key: 'hotLeads', label: 'Hot leads' },
-  { key: 'followUpsDue', label: 'Follow-ups due' },
-  { key: 'wonThisMonth', label: 'Won this month' },
-];
+import { DASHBOARD_STAT_TILES } from '@/lib/dashboard-stats';
 
 export function DashboardPage() {
   const user = useAuthStore((state) => state.user);
@@ -35,9 +29,9 @@ export function DashboardPage() {
       )}
 
       <Grid container spacing={2}>
-        {STAT_TILES.map((tile) => (
+        {DASHBOARD_STAT_TILES.map((tile) => (
           <Grid key={tile.key} size={{ xs: 6, lg: 3 }}>
-            <StatCard label={tile.label} value={isLoading ? '—' : (data?.[tile.key] ?? 0)} />
+            <StatCard label={tile.label} icon={tile.icon} value={isLoading ? '—' : (data?.[tile.key] ?? 0)} />
           </Grid>
         ))}
       </Grid>

@@ -8,10 +8,19 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
+import AddOutlined from '@mui/icons-material/AddOutlined';
+import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
+import NotificationsNoneOutlined from '@mui/icons-material/NotificationsNoneOutlined';
+import CompareArrowsOutlined from '@mui/icons-material/CompareArrowsOutlined';
+import PersonOutlineOutlined from '@mui/icons-material/PersonOutlineOutlined';
+import PhoneOutlined from '@mui/icons-material/PhoneOutlined';
+import ReceiptLongOutlined from '@mui/icons-material/ReceiptLongOutlined';
+import AccountBalanceWalletOutlined from '@mui/icons-material/AccountBalanceWalletOutlined';
 import { fetchClient } from '@/api/clients-api';
 import { DealStageChip } from '@/components/common/deal-stage-chip';
 import { EmptyState } from '@/components/common/empty-state';
 import { LoadingState } from '@/components/common/loading-state';
+import { SectionHeading } from '@/components/common/section-heading';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 export function ClientDetailPage() {
@@ -41,23 +50,23 @@ export function ClientDetailPage() {
             {client.businessType} · {client.address}
           </Typography>
         </Box>
-        <Button variant="contained" size="small">
-          + New visit
+        <Button variant="contained" size="small" startIcon={<AddOutlined sx={{ fontSize: 16 }} />}>
+          New visit
         </Button>
       </Stack>
 
       <Grid container spacing={2}>
-        <InfoTile label="Contact" value={client.contactPerson} />
-        <InfoTile label="Mobile" value={client.mobile} />
-        <InfoTile label="GST" value={client.gstNumber || '—'} />
-        <InfoTile label="Pipeline" value={formatCurrency(client.quotationAmount)} />
+        <InfoTile icon={PersonOutlineOutlined} label="Contact" value={client.contactPerson} />
+        <InfoTile icon={PhoneOutlined} label="Mobile" value={client.mobile} />
+        <InfoTile icon={ReceiptLongOutlined} label="GST" value={client.gstNumber || '—'} />
+        <InfoTile icon={AccountBalanceWalletOutlined} label="Pipeline" value={formatCurrency(client.quotationAmount)} />
       </Grid>
 
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, lg: 8 }}>
-          <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+          <SectionHeading icon={HistoryOutlined} sx={{ mb: 2 }}>
             Timeline
-          </Typography>
+          </SectionHeading>
           <Stack spacing={2}>
             {client.visits?.length ? (
               client.visits.map((visit) => (
@@ -95,9 +104,7 @@ export function ClientDetailPage() {
           <Stack spacing={2}>
             <Card>
               <CardContent>
-                <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
-                  Follow-ups
-                </Typography>
+                <SectionHeading icon={NotificationsNoneOutlined}>Follow-ups</SectionHeading>
                 {client.followUps?.length ? (
                   <Stack spacing={1}>
                     {client.followUps.map((fu) => (
@@ -117,9 +124,7 @@ export function ClientDetailPage() {
 
             <Card>
               <CardContent>
-                <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
-                  Competitor stack
-                </Typography>
+                <SectionHeading icon={CompareArrowsOutlined}>Competitor stack</SectionHeading>
                 {client.competitorStack?.length ? (
                   <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap' }}>
                     {client.competitorStack.map((c) => (
@@ -138,14 +143,17 @@ export function ClientDetailPage() {
   );
 }
 
-function InfoTile({ label, value }) {
+function InfoTile({ icon: Icon, label, value }) {
   return (
     <Grid size={{ xs: 6, sm: 3 }}>
       <Card>
         <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-          <Typography variant="caption" color="text.secondary">
-            {label}
-          </Typography>
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+            <Icon sx={{ fontSize: 14, color: 'text.secondary' }} />
+            <Typography variant="caption" color="text.secondary">
+              {label}
+            </Typography>
+          </Stack>
           <Typography variant="body2" fontWeight={600}>
             {value}
           </Typography>

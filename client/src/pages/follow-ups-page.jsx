@@ -7,6 +7,9 @@ import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import ErrorOutlineOutlined from '@mui/icons-material/ErrorOutlineOutlined';
+import TodayOutlined from '@mui/icons-material/TodayOutlined';
+import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined';
 import { fetchFollowUps } from '@/api/visits-api';
 import { PageHeader } from '@/components/common/page-header';
 import { LoadingState } from '@/components/common/loading-state';
@@ -28,9 +31,9 @@ function groupFollowUps(followUps) {
 }
 
 const GROUP_META = {
-  overdue: { title: 'Overdue', color: 'error.main' },
-  today: { title: 'Today', color: 'stage.hot' },
-  upcoming: { title: 'Upcoming', color: 'text.secondary' },
+  overdue: { title: 'Overdue', color: 'error.main', icon: ErrorOutlineOutlined },
+  today: { title: 'Today', color: 'stage.hot', icon: TodayOutlined },
+  upcoming: { title: 'Upcoming', color: 'text.secondary', icon: ScheduleOutlined },
 };
 
 export function FollowUpsPage() {
@@ -49,19 +52,24 @@ export function FollowUpsPage() {
 
       <Stack spacing={4}>
         {Object.entries(groups).map(([key, items]) =>
-          items.length > 0 ? <FollowUpGroup key={key} title={GROUP_META[key].title} color={GROUP_META[key].color} items={items} /> : null,
+          items.length > 0 ? (
+            <FollowUpGroup key={key} title={GROUP_META[key].title} color={GROUP_META[key].color} icon={GROUP_META[key].icon} items={items} />
+          ) : null,
         )}
       </Stack>
     </>
   );
 }
 
-function FollowUpGroup({ title, color, items }) {
+function FollowUpGroup({ title, color, icon: Icon, items }) {
   return (
     <Stack spacing={1}>
-      <Typography variant="overline" sx={{ color, fontWeight: 700 }}>
-        {title} · {items.length}
-      </Typography>
+      <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', color }}>
+        <Icon sx={{ fontSize: 16 }} />
+        <Typography variant="overline" sx={{ color: 'inherit', fontWeight: 700 }}>
+          {title} · {items.length}
+        </Typography>
+      </Stack>
       <Stack spacing={1}>
         {items.map((fu) => (
           <Card key={fu.id}>
