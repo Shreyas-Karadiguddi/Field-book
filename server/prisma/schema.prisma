@@ -1,0 +1,119 @@
+// Prisma schema for Fieldbook — Field Client Management CRM
+// Five tables: users, clients, visits, follow_ups, products_discussed
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  EXECUTIVE
+  MANAGER
+  ADMIN
+}
+
+enum DealStage {
+  LEAD
+  HOT
+  WON
+  LOST
+}
+
+enum SoftwareRelationship {
+  PROSPECT
+  UPGRADE
+  RENEWAL
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  mobile       String?
+  passwordHash String
+  role         Role     @default(EXECUTIVE)
+  area         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  clients   Client[]   @relation("AssignedExecutive")
+  visits    Visit[]
+  followUps FollowUp[]
+
+  @@map("users")
+}
+
+model Client {
+  id                   String               @id @default(uuid())
+  shopName             String
+  contactPerson        String
+  mobile               String
+  gstNumber            String?
+  businessType         String?
+  softwareRelationship SoftwareRelationship @default(PROSPECT)
+  competitorStack      Json                 @default("[]")
+  dealStage            DealStage            @default(LEAD)
+  quotationAmount      Float?
+  lat                  Float?
+  lng                  Float?
+  address              String?
+  area                 String?
+  assignedExecutiveId  String
+  assignedExecutive    User                 @relation("AssignedExecutive", fields: [assignedExecutiveId], references: [id])
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  visits    Visit[]
+  followUps FollowUp[]
+
+  @@map("clients")
+}
+
+model Visit {
+  id                String    @id @default(uuid())
+  clientId          String
+  client            Client    @relation(fields: [clientId], references: [id])
+  executiveId       String
+  executive         User      @relation(fields: [executiveId], references: [id])
+  conversationNotes String?
+  photo             Bytes?
+  gpsLat            Float?
+  gpsLng            Float?
+  dealStage         DealStage @default(LEAD)
+  quotationAmount   Float?
+  visitedAt         DateTime  @default(now())
+  createdAt         DateTime  @default(now())
+
+  productsDiscussed ProductDiscussed[]
+
+  @@map("visits")
+}
+
+model FollowUp {
+  id          String   @id @default(uuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  executiveId String
+  executive   User     @relation(fields: [executiveId], references: [id])
+  dueDate     DateTime
+  notes       String?
+  completed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("follow_ups")
+}
+
+model ProductDiscussed {
+  id          String   @id @default(uuid())
+  visitId     String
+  visit       Visit    @relation(fields: [visitId], references: [id])
+  productName String
+  createdAt   DateTime @default(now())
+
+  @@map("products_discussed")
+}
