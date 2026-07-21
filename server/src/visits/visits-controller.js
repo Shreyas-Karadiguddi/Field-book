@@ -6,9 +6,11 @@ import {
   Post,
   Patch,
   Req,
+  Res,
   Param,
   Query,
   Body,
+  NotFoundException,
 } from '@nestjs/common';
 import { VisitsService } from './visits-service';
 import { CreateVisitDto } from './dto/create-visit-dto';
@@ -37,9 +39,25 @@ export class VisitsController {
     return ok(await this.visitsService.create(dto, photoBuffer, user));
   }
 
+  @Get()
+  async findAll(query, user) {
+    return ok(await this.visitsService.findAll(user, query));
+  }
+
   @Get('client/:clientId')
   async findForClient(clientId) {
     return ok(await this.visitsService.findForClient(clientId));
+  }
+
+  @Get(':id/photo')
+  async getPhoto(id, res) {
+    const photo = await this.visitsService.findPhoto(id);
+    if (!photo) {
+      throw new NotFoundException('No photo for this visit');
+    }
+    res.header('Cache-Control', 'private, max-age=3600');
+    res.type('image/jpeg');
+    res.send(photo);
   }
 
   @Get('follow-ups')
@@ -60,7 +78,9 @@ export class VisitsController {
 }
 
 bindParams(VisitsController, 'create', { 0: Req(), 1: CurrentUser() });
+bindParams(VisitsController, 'findAll', { 0: Query(), 1: CurrentUser() });
 bindParams(VisitsController, 'findForClient', { 0: Param('clientId') });
+bindParams(VisitsController, 'getPhoto', { 0: Param('id'), 1: Res() });
 bindParams(VisitsController, 'findFollowUps', { 0: Query(), 1: CurrentUser() });
 bindParams(VisitsController, 'createFollowUp', { 0: Body(), 1: CurrentUser() });
 bindParams(VisitsController, 'completeFollowUp', { 0: Param('id') });

@@ -1,3 +1,3 @@
-import { Role, DealStage, SoftwareRelationship } from '../generated/prisma/index.js';
+import { Role, DealStage, SoftwareRelationship, VisitChannel } from '../generated/prisma/index.js';
 
-export { Role, DealStage, SoftwareRelationship };
+export { Role, DealStage, SoftwareRelationship, VisitChannel };

@@ -9,11 +9,15 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { DealStage } from '../../common/enums';
+import { DealStage, VisitChannel } from '../../common/enums';
 
 export class CreateVisitDto {
   @IsString()
   clientId;
+
+  @IsOptional()
+  @IsEnum(VisitChannel)
+  channel;
 
   @IsOptional()
   @IsString()

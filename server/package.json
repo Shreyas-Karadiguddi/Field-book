@@ -10,6 +10,8 @@
     "lint": "eslint \"src/**/*.js\"",
     "start": "babel-node index.js",
     "start:dev": "nodemon",
+    "build": "prisma generate && babel src --out-dir dist --extensions \".js\" --copy-files",
+    "start:prod": "node dist/main.js",
     "test": "jest",
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json"
@@ -17,11 +19,13 @@
   "dependencies": {
     "@fastify/cookie": "^11.1.1",
     "@fastify/multipart": "^10.1.0",
+    "@fastify/static": "^9.3.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-fastify": "^11.1.28",
+    "@nestjs/serve-static": "^5.0.5",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "bcrypt": "^6.0.0",
@@ -33,6 +37,7 @@
     "sharp": "^0.35.3"
   },
   "devDependencies": {
+    "@babel/cli": "7.29.7",
     "@babel/core": "7.29.0",
     "@babel/eslint-parser": "^7.29.7",
     "@babel/node": "7.29.0",

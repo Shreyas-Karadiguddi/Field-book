@@ -9,11 +9,14 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Chip from '@mui/material/Chip';
+import Button from '@mui/material/Button';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import PhoneOutlined from '@mui/icons-material/PhoneOutlined';
+import AddOutlined from '@mui/icons-material/AddOutlined';
 import { fetchClients } from '@/api/clients-api';
 import { DealStageChip } from '@/components/common/deal-stage-chip';
+import { ClientFormDialog } from '@/components/clients/client-form-dialog';
 import { PageHeader } from '@/components/common/page-header';
 import { EmptyState } from '@/components/common/empty-state';
 import { LoadingState } from '@/components/common/loading-state';
@@ -24,6 +27,7 @@ const STAGE_FILTERS = ['ALL', 'LEAD', 'HOT', 'WON', 'LOST'];
 export function ClientsListPage() {
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState('ALL');
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['clients'],
@@ -47,22 +51,27 @@ export function ClientsListPage() {
         title="My clients"
         subtitle={`${clients.length} shops in your area`}
         action={
-          <TextField
-            size="small"
-            placeholder="Search shops…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            sx={{ width: 260 }}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
+          <Stack direction="row" spacing={1.5}>
+            <TextField
+              size="small"
+              placeholder="Search shops…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              sx={{ width: 260 }}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
+            <Button variant="contained" size="small" startIcon={<AddOutlined sx={{ fontSize: 16 }} />} onClick={() => setDialogOpen(true)}>
+              Add client
+            </Button>
+          </Stack>
         }
       />
 
@@ -119,6 +128,8 @@ export function ClientsListPage() {
       </Grid>
 
       {!isLoading && filtered.length === 0 && <EmptyState message="No clients match your filters." />}
+
+      <ClientFormDialog open={dialogOpen} onClose={() => setDialogOpen(false)} client={null} />
     </>
   );
 }

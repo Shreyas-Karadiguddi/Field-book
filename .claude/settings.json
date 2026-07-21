@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(railway login *)",
+      "Bash(node -e ' *)",
+      "Bash(railway --version)",
+      "Bash(railway whoami *)",
+      "Bash(railway status *)"
+    ]
+  }
+}

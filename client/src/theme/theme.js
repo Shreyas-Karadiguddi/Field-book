@@ -11,15 +11,25 @@ const STAGE_COLORS = {
   lost: palette.stageLost,
 };
 
-// The sidebar/nav stays a fixed dark navy regardless of light/dark mode (a common
-// dashboard pattern) — read via `theme.palette.sidebar.*` in AppShell, not the
-// mode-dependent `background`/`text` slots.
-const SIDEBAR = {
+// The sidebar's header strip (logo row) stays a fixed dark navy in both modes,
+// so its text is always light regardless of scheme. The rest of the sidebar body
+// switches with the mode — read via `theme.palette.sidebar.*` in AppShell.
+const SIDEBAR_DARK = {
   header: palette.navHeader,
+  headerText: palette.textOnDark,
   background: palette.sidebar,
   text: palette.textOnDark,
   textSecondary: palette.textOnDarkMuted,
   activeBackground: 'rgba(248, 250, 252, 0.08)',
+};
+
+const SIDEBAR_LIGHT = {
+  header: palette.navHeader,
+  headerText: palette.textOnDark,
+  background: palette.sidebarWashLight,
+  text: palette.textOnLight,
+  textSecondary: palette.textOnLightMuted,
+  activeBackground: 'rgba(13, 148, 136, 0.08)',
 };
 
 export const theme = createTheme({
@@ -30,8 +40,9 @@ export const theme = createTheme({
         primary: { main: palette.primary },
         background: { default: palette.pageBackground, paper: palette.cardBackground },
         text: { primary: palette.textOnLight, secondary: palette.textOnLightMuted },
+        divider: palette.borderLight,
         stage: STAGE_COLORS,
-        sidebar: SIDEBAR,
+        sidebar: SIDEBAR_LIGHT,
       },
     },
     dark: {
@@ -40,7 +51,7 @@ export const theme = createTheme({
         background: { default: palette.navHeader, paper: palette.sidebar },
         text: { primary: palette.textOnDark, secondary: palette.textOnDarkMuted },
         stage: STAGE_COLORS,
-        sidebar: SIDEBAR,
+        sidebar: SIDEBAR_DARK,
       },
     },
   },

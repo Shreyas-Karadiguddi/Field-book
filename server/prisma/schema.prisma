@@ -23,6 +23,11 @@ enum DealStage {
   LOST
 }
 
+enum VisitChannel {
+  IN_PERSON
+  CALL
+}
+
 enum SoftwareRelationship {
   PROSPECT
   UPGRADE
@@ -37,6 +42,7 @@ model User {
   passwordHash String
   role         Role     @default(EXECUTIVE)
   area         String?
+  active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -79,6 +85,7 @@ model Visit {
   client            Client    @relation(fields: [clientId], references: [id])
   executiveId       String
   executive         User      @relation(fields: [executiveId], references: [id])
+  channel           VisitChannel @default(IN_PERSON)
   conversationNotes String?
   photo             Bytes?
   gpsLat            Float?

@@ -28,12 +28,19 @@ export function AreaMapPage() {
   const { data: clients = [] } = useQuery({ queryKey: ['clients'], queryFn: () => fetchClients() });
 
   const withCoords = clients.filter((c) => c.lat && c.lng);
+  const areas = [...new Set(withCoords.map((c) => c.area).filter(Boolean))];
+  const mapCenter = withCoords.length
+    ? [
+        withCoords.reduce((sum, c) => sum + c.lat, 0) / withCoords.length,
+        withCoords.reduce((sum, c) => sum + c.lng, 0) / withCoords.length,
+      ]
+    : DEFAULT_CENTER;
 
   return (
     <>
       <PageHeader
         title="Area coverage"
-        subtitle={`${clients.length} shops · Andheri West`}
+        subtitle={`${clients.length} shops${areas.length ? ` · ${areas.join(', ')}` : ''}`}
         action={
           <ToggleButtonGroup size="small" exclusive value={view} onChange={(_, next) => next && setView(next)}>
             <ToggleButton value="map" sx={{ gap: 0.5 }}>
@@ -50,7 +57,7 @@ export function AreaMapPage() {
 
       {view === 'map' ? (
         <Box sx={{ height: 600, borderRadius: 2, overflow: 'hidden', border: 1, borderColor: 'divider' }}>
-          <MapContainer center={DEFAULT_CENTER} zoom={14} style={{ height: '100%', width: '100%' }}>
+          <MapContainer key={mapCenter.join(',')} center={mapCenter} zoom={14} style={{ height: '100%', width: '100%' }}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

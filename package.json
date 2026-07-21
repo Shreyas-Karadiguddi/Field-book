@@ -1,0 +1,12 @@
+{
+  "name": "fieldbook",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "build": "npm --prefix client install && npm --prefix client run build && npm --prefix server install && npm --prefix server run build",
+    "start": "cd server && npx prisma db push --accept-data-loss && npm run start:prod"
+  }
+}

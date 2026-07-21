@@ -7,6 +7,7 @@ import {
   Res,
   HttpCode,
   HttpStatus,
+  Get,
 } from '@nestjs/common';
 import { AuthService } from './auth-service';
 import { RegisterDto } from './dto/register-dto';
@@ -56,6 +57,11 @@ export class AuthController {
   logout(res) {
     res.clearCookie(REFRESH_COOKIE, { path: '/' });
     return ok(null);
+  }
+
+  @Get('test')
+  test() {
+    return ok({ message: 'Auth test endpoint is working!' });
   }
 }
 

@@ -19,11 +19,18 @@ import { StatCard } from '@/components/common/stat-card';
 import { SectionHeading } from '@/components/common/section-heading';
 import { LoadingState } from '@/components/common/loading-state';
 import { formatCurrency } from '@/lib/format';
-import { DEMO_FUNNEL_STAGES } from '@/mocks/fixtures';
+
+const FUNNEL_STAGES = [
+  { key: 'LEAD', label: 'Lead' },
+  { key: 'HOT', label: 'Hot' },
+  { key: 'WON', label: 'Won' },
+  { key: 'LOST', label: 'Lost' },
+];
 
 export function PipelinePage() {
   const theme = useTheme();
   const { data, isLoading } = useQuery({ queryKey: ['reports', 'pipeline'], queryFn: fetchPipeline });
+  const funnelData = FUNNEL_STAGES.map((stage) => ({ label: stage.label, value: data?.funnel?.[stage.key] ?? 0 }));
 
   return (
     <>
@@ -55,7 +62,7 @@ export function PipelinePage() {
                   <SectionHeading icon={FilterAltOutlined}>Conversion funnel</SectionHeading>
                   <Box sx={{ height: 260 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={DEMO_FUNNEL_STAGES} layout="vertical" margin={{ left: 16 }}>
+                      <BarChart data={funnelData} layout="vertical" margin={{ left: 16 }}>
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                         <XAxis type="number" hide />
                         <YAxis type="category" dataKey="label" width={70} tick={{ fontSize: 12 }} />

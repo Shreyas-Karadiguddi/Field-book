@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -9,11 +10,14 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import AddOutlined from '@mui/icons-material/AddOutlined';
+import EditOutlined from '@mui/icons-material/EditOutlined';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import NotificationsNoneOutlined from '@mui/icons-material/NotificationsNoneOutlined';
 import CompareArrowsOutlined from '@mui/icons-material/CompareArrowsOutlined';
 import PersonOutlineOutlined from '@mui/icons-material/PersonOutlineOutlined';
 import PhoneOutlined from '@mui/icons-material/PhoneOutlined';
+import CallOutlined from '@mui/icons-material/CallOutlined';
+import StorefrontOutlined from '@mui/icons-material/StorefrontOutlined';
 import ReceiptLongOutlined from '@mui/icons-material/ReceiptLongOutlined';
 import AccountBalanceWalletOutlined from '@mui/icons-material/AccountBalanceWalletOutlined';
 import { fetchClient } from '@/api/clients-api';
@@ -21,10 +25,16 @@ import { DealStageChip } from '@/components/common/deal-stage-chip';
 import { EmptyState } from '@/components/common/empty-state';
 import { LoadingState } from '@/components/common/loading-state';
 import { SectionHeading } from '@/components/common/section-heading';
+import { LogVisitDialog } from '@/components/visits/log-visit-dialog';
+import { VisitPhoto } from '@/components/visits/visit-photo';
+import { ClientFormDialog } from '@/components/clients/client-form-dialog';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 export function ClientDetailPage() {
   const { id } = useParams();
+  const queryClient = useQueryClient();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const { data: client, isLoading } = useQuery({
     queryKey: ['clients', id],
     queryFn: () => fetchClient(id),
@@ -50,9 +60,14 @@ export function ClientDetailPage() {
             {client.businessType} · {client.address}
           </Typography>
         </Box>
-        <Button variant="contained" size="small" startIcon={<AddOutlined sx={{ fontSize: 16 }} />}>
-          New visit
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <Button variant="outlined" size="small" startIcon={<EditOutlined sx={{ fontSize: 16 }} />} onClick={() => setEditOpen(true)}>
+            Edit
+          </Button>
+          <Button variant="contained" size="small" startIcon={<AddOutlined sx={{ fontSize: 16 }} />} onClick={() => setDialogOpen(true)}>
+            Log activity
+          </Button>
+        </Stack>
       </Stack>
 
       <Grid container spacing={2}>
@@ -73,11 +88,19 @@ export function ClientDetailPage() {
                 <Card key={visit.id}>
                   <CardContent>
                     <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                      <DealStageChip stage={visit.dealStage} />
+                      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                        {visit.channel === 'CALL' ? (
+                          <CallOutlined sx={{ fontSize: 16, color: 'text.secondary' }} />
+                        ) : (
+                          <StorefrontOutlined sx={{ fontSize: 16, color: 'text.secondary' }} />
+                        )}
+                        <DealStageChip stage={visit.dealStage} />
+                      </Stack>
                       <Typography variant="caption" color="text.secondary">
                         {formatDate(visit.visitedAt)}
                       </Typography>
                     </Stack>
+                    {visit.hasPhoto && <VisitPhoto visitId={visit.id} sx={{ mb: 1.5 }} />}
                     <Typography variant="body2">{visit.conversationNotes}</Typography>
                     {visit.productsDiscussed?.length > 0 && (
                       <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', mt: 1.5 }}>
@@ -139,6 +162,20 @@ export function ClientDetailPage() {
           </Stack>
         </Grid>
       </Grid>
+
+      <LogVisitDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        client={{ id: client.id, shopName: client.shopName, dealStage: client.dealStage }}
+        onCreated={() => queryClient.invalidateQueries({ queryKey: ['clients', id] })}
+      />
+
+      <ClientFormDialog
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        client={client}
+        onSaved={() => queryClient.invalidateQueries({ queryKey: ['clients', id] })}
+      />
     </Stack>
   );
 }

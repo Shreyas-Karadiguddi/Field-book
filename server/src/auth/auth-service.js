@@ -20,7 +20,7 @@ export class AuthService {
     this.jwtService = jwtService;
   }
 
-  async register({ name, email, password, mobile, role }) {
+  async register({ name, email, password, mobile }) {
     const existing = await this.prisma.user.findUnique({ where: { email } });
     if (existing) {
       throw new ConflictException('An account with this email already exists');
@@ -28,7 +28,7 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await this.prisma.user.create({
-      data: { name, email, mobile, passwordHash, role: role || Role.EXECUTIVE },
+      data: { name, email, mobile, passwordHash, role: Role.EXECUTIVE },
     });
 
     return this.issueTokens(user);
@@ -38,6 +38,9 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       throw new UnauthorizedException('Invalid email or password');
+    }
+    if (!user.active) {
+      throw new UnauthorizedException('This account has been deactivated');
     }
 
     return this.issueTokens(user);
@@ -62,6 +65,9 @@ export class AuthService {
     });
     if (!user) {
       throw new UnauthorizedException('User no longer exists');
+    }
+    if (!user.active) {
+      throw new UnauthorizedException('This account has been deactivated');
     }
 
     return this.issueTokens(user);

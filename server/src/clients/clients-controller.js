@@ -14,12 +14,15 @@ import { CreateClientDto } from './dto/create-client-dto';
 import { UpdateClientDto } from './dto/update-client-dto';
 import { validateDto } from '../common/validate-dto';
 import { ok } from '../common/http-response';
+import { Role } from '../common/enums';
 import { JwtAuthGuard } from '../common/guards/jwt-auth-guard';
+import { RolesGuard } from '../common/guards/roles-guard';
+import { Roles } from '../common/decorators/roles-decorator';
 import { CurrentUser } from '../common/decorators/current-user-decorator';
 import { bindParams } from '../common/bind-params';
 
 @Controller('clients')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Dependencies(ClientsService)
 export class ClientsController {
   constructor(clientsService) {
@@ -35,6 +38,12 @@ export class ClientsController {
   @Get()
   async findAll(query, user) {
     return ok(await this.clientsService.findAll(user, query));
+  }
+
+  @Get('executives')
+  @Roles(Role.MANAGER, Role.ADMIN)
+  async findExecutives() {
+    return ok(await this.clientsService.findExecutives());
   }
 
   @Get(':id')

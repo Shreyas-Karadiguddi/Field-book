@@ -7,7 +7,7 @@ A CRM for field sales executives who visit shops/businesses in person. Executive
 - **Frontend:** React + Vite, MUI (Material UI) for components/theming, Zustand (state), React Router v6, React Query (polling, no WebSockets), Recharts (charts), Leaflet + OpenStreetMap (maps, free), React Hook Form + Zod (validation)
 - **Backend:** NestJS + Fastify (not Express, not Next.js), Prisma ORM, JWT + bcrypt (auth), Sharp (photo compression)
 - **Database:** PostgreSQL + PostGIS (single database, stores everything including photos as BYTEA)
-- **Deploy:** Vercel (frontend), Railway (backend), Neon (database). No Docker. Git push auto-deploys.
+- **Deploy:** Single Railway service (`fieldbook-app`) for both frontend and backend — NestJS serves the built client (`client/dist`) as static files via `ServeStaticModule` alongside the `/api/*` routes, so there's no separate frontend host. Railway's own managed Postgres add-on is the database (not Neon). No Docker. Root `package.json` `build`/`start` scripts drive the Railway build (`npm --prefix client run build` then `npm --prefix server run build`, followed by `prisma db push` + `start:prod`). Deploy with `railway up` (or a connected git push, if/when GitHub auto-deploy is wired up).
 
 ## Architecture — three layers, nothing else
 ```

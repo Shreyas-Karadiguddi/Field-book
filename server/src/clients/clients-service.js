@@ -31,16 +31,27 @@ export class ClientsService {
     });
   }
 
+  findExecutives() {
+    return this.prisma.user.findMany({
+      where: { role: Role.EXECUTIVE, active: true },
+      select: { id: true, name: true, area: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   async findOne(id, user) {
     const client = await this.prisma.client.findUnique({
       where: { id },
       include: {
         visits: {
           orderBy: { visitedAt: 'desc' },
-          include: { productsDiscussed: true, executive: true },
+          include: {
+            productsDiscussed: true,
+            executive: { select: { id: true, name: true, email: true, role: true, area: true } },
+          },
         },
         followUps: { orderBy: { dueDate: 'asc' } },
-        assignedExecutive: true,
+        assignedExecutive: { select: { id: true, name: true, email: true, role: true, area: true } },
       },
     });
 
@@ -48,7 +59,11 @@ export class ClientsService {
       throw new NotFoundException('Client not found');
     }
     assertClientAccess(client, user);
-    return client;
+
+    return {
+      ...client,
+      visits: client.visits.map(({ photo, ...visit }) => ({ ...visit, hasPhoto: photo != null })),
+    };
   }
 
   async update(id, dto, user) {

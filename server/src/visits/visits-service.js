@@ -1,7 +1,7 @@
 import { Injectable, Dependencies, NotFoundException } from '@nestjs/common';
 import sharp from 'sharp';
 import { PrismaService } from '../common/prisma/prisma-service';
-import { Role } from '../common/enums';
+import { Role, VisitChannel } from '../common/enums';
 
 const PHOTO_TARGET_BYTES = 200 * 1024;
 const PHOTO_RESIZE_OPTIONS = { fit: 'inside', withoutEnlargement: true };
@@ -29,6 +29,7 @@ export class VisitsService {
       data: {
         clientId: dto.clientId,
         executiveId: user.sub,
+        channel: dto.channel || VisitChannel.IN_PERSON,
         conversationNotes: dto.conversationNotes,
         photo,
         gpsLat: dto.gpsLat,
@@ -61,15 +62,43 @@ export class VisitsService {
       });
     }
 
-    return visit;
+    const { photo: _photo, ...visitWithoutPhoto } = visit;
+    return { ...visitWithoutPhoto, hasPhoto: photo != null };
   }
 
-  findForClient(clientId) {
-    return this.prisma.visit.findMany({
+  async findForClient(clientId) {
+    const visits = await this.prisma.visit.findMany({
       where: { clientId },
       orderBy: { visitedAt: 'desc' },
-      include: { productsDiscussed: true, executive: true },
+      include: {
+        productsDiscussed: true,
+        executive: { select: { id: true, name: true, email: true, role: true, area: true } },
+      },
     });
+
+    return visits.map(({ photo, ...visit }) => ({ ...visit, hasPhoto: photo != null }));
+  }
+
+  async findAll(user, { dealStage } = {}) {
+    const visits = await this.prisma.visit.findMany({
+      where: {
+        ...(user.role === Role.EXECUTIVE ? { executiveId: user.sub } : {}),
+        ...(dealStage ? { dealStage } : {}),
+      },
+      orderBy: { visitedAt: 'desc' },
+      include: {
+        client: { select: { id: true, shopName: true, businessType: true, area: true } },
+        executive: { select: { id: true, name: true } },
+        productsDiscussed: true,
+      },
+    });
+
+    return visits.map(({ photo, ...visit }) => ({ ...visit, hasPhoto: photo != null }));
+  }
+
+  async findPhoto(id) {
+    const visit = await this.prisma.visit.findUnique({ where: { id }, select: { photo: true } });
+    return visit?.photo ?? null;
   }
 
   createFollowUp(dto, user) {

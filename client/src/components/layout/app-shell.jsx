@@ -17,10 +17,12 @@ import NotificationsNoneOutlined from '@mui/icons-material/NotificationsNoneOutl
 import MapOutlined from '@mui/icons-material/MapOutlined';
 import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
 import FilterAltOutlined from '@mui/icons-material/FilterAltOutlined';
+import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import LogoutOutlined from '@mui/icons-material/LogoutOutlined';
 import { useAuthStore } from '@/store/auth-store';
 import { logout as logoutRequest } from '@/api/auth-api';
 import { Logo } from '@/components/common/logo';
+import { ThemeToggle } from '@/components/common/theme-toggle';
 
 const DRAWER_WIDTH = 240;
 
@@ -36,6 +38,8 @@ const REPORTS_LINKS = [
   { to: '/reports/performance', label: 'My performance', icon: TrendingUpOutlined },
   { to: '/reports/pipeline', label: 'Pipeline', icon: FilterAltOutlined, roles: ['MANAGER', 'ADMIN'] },
 ];
+
+const ADMIN_LINKS = [{ to: '/users', label: 'Users', icon: GroupOutlined, roles: ['ADMIN'] }];
 
 export function AppShell() {
   const user = useAuthStore((state) => state.user);
@@ -53,6 +57,7 @@ export function AppShell() {
   }
 
   const reportsLinks = REPORTS_LINKS.filter((link) => !link.roles || link.roles.includes(user?.role));
+  const adminLinks = ADMIN_LINKS.filter((link) => !link.roles || link.roles.includes(user?.role));
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100svh' }}>
@@ -71,18 +76,20 @@ export function AppShell() {
           },
         }}
       >
-        <Toolbar sx={{ bgcolor: 'sidebar.header' }}>
+        <Toolbar sx={{ bgcolor: 'sidebar.header', justifyContent: 'space-between' }}>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <Logo />
-            <Typography variant="h6" fontWeight={700} sx={{ color: 'sidebar.text' }}>
+            <Typography variant="h6" fontWeight={700} sx={{ color: 'sidebar.headerText' }}>
               Fieldbook
             </Typography>
           </Stack>
+          <ThemeToggle sx={{ color: 'sidebar.headerText' }} />
         </Toolbar>
 
         <Box sx={{ flex: 1, overflowY: 'auto', py: 1 }}>
           <NavSection title="Workspace" links={WORKSPACE_LINKS} currentPath={location.pathname} />
           <NavSection title="Reports" links={reportsLinks} currentPath={location.pathname} />
+          <NavSection title="Admin" links={adminLinks} currentPath={location.pathname} />
         </Box>
 
         <Divider sx={{ borderColor: 'sidebar.textSecondary', opacity: 0.2 }} />

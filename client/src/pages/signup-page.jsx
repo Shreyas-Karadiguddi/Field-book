@@ -13,20 +13,24 @@ import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import Link from '@mui/material/Link';
 import InputAdornment from '@mui/material/InputAdornment';
+import PersonOutlined from '@mui/icons-material/PersonOutlined';
 import MailOutlineOutlined from '@mui/icons-material/MailOutlineOutlined';
 import LockOutlined from '@mui/icons-material/LockOutlined';
-import LoginOutlined from '@mui/icons-material/LoginOutlined';
-import { login } from '@/api/auth-api';
+import PhoneOutlined from '@mui/icons-material/PhoneOutlined';
+import PersonAddOutlined from '@mui/icons-material/PersonAddOutlined';
+import { register as registerAccount } from '@/api/auth-api';
 import { useAuthStore } from '@/store/auth-store';
 import { Logo } from '@/components/common/logo';
 import { ThemeToggle } from '@/components/common/theme-toggle';
 
-const loginSchema = z.object({
+const signupSchema = z.object({
+  name: z.string().min(1, 'Enter your name'),
   email: z.string().email('Enter a valid email'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  mobile: z.string().optional(),
 });
 
-export function LoginPage() {
+export function SignupPage() {
   const navigate = useNavigate();
   const setSession = useAuthStore((state) => state.setSession);
   const [serverError, setServerError] = useState(null);
@@ -35,16 +39,16 @@ export function LoginPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(loginSchema) });
+  } = useForm({ resolver: zodResolver(signupSchema) });
 
   async function onSubmit(values) {
     setServerError(null);
     try {
-      const { user, accessToken } = await login(values);
+      const { user, accessToken } = await registerAccount(values);
       setSession(user, accessToken);
       navigate('/');
     } catch (error) {
-      setServerError(error.response?.data?.error || 'Unable to sign in');
+      setServerError(error.response?.data?.error || 'Unable to create your account');
     }
   }
 
@@ -63,13 +67,29 @@ export function LoginPage() {
           </Stack>
 
           <Typography variant="h5" fontWeight={600} gutterBottom>
-            Welcome back
+            Create your account
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Sign in to continue your visits.
+            Sign up as a field executive to start logging visits.
           </Typography>
 
           <Stack component="form" spacing={2.5} onSubmit={handleSubmit(onSubmit)}>
+            <TextField
+              label="Full name"
+              autoComplete="name"
+              error={!!errors.name}
+              helperText={errors.name?.message}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonOutlined sx={{ fontSize: 20, color: 'text.secondary' }} />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+              {...register('name')}
+            />
             <TextField
               label="Email"
               type="email"
@@ -89,9 +109,23 @@ export function LoginPage() {
               {...register('email')}
             />
             <TextField
+              label="Mobile (optional)"
+              autoComplete="tel"
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PhoneOutlined sx={{ fontSize: 20, color: 'text.secondary' }} />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+              {...register('mobile')}
+            />
+            <TextField
               label="Password"
               type="password"
-              autoComplete="current-password"
+              autoComplete="new-password"
               error={!!errors.password}
               helperText={errors.password?.message}
               slotProps={{
@@ -111,12 +145,12 @@ export function LoginPage() {
               variant="contained"
               size="large"
               disabled={isSubmitting}
-              startIcon={<LoginOutlined sx={{ fontSize: 18 }} />}
+              startIcon={<PersonAddOutlined sx={{ fontSize: 18 }} />}
             >
-              {isSubmitting ? 'Signing in…' : 'Sign in'}
+              {isSubmitting ? 'Creating account…' : 'Create account'}
             </Button>
             <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-              New here? <Link component={RouterLink} to="/signup">Create an account</Link>
+              Already have an account? <Link component={RouterLink} to="/login">Sign in</Link>
             </Typography>
           </Stack>
         </CardContent>

@@ -81,6 +81,7 @@ export class ReportsService {
 
     const executives = await this.prisma.user.findMany({
       where: { id: { in: leaderboard.map((row) => row.assignedExecutiveId) } },
+      select: { id: true, name: true, email: true, role: true, area: true },
     });
 
     return {
