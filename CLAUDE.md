@@ -7,7 +7,7 @@ A CRM for field sales executives who visit shops/businesses in person. Executive
 - **Frontend:** React + Vite, MUI (Material UI) for components/theming, Zustand (state), React Router v6, React Query (polling, no WebSockets), Recharts (charts), Leaflet + OpenStreetMap (maps, free), React Hook Form + Zod (validation)
 - **Backend:** NestJS + Fastify (not Express, not Next.js), Prisma ORM, JWT + bcrypt (auth), Sharp (photo compression)
 - **Database:** PostgreSQL + PostGIS (single database, stores everything including photos as BYTEA)
-- **Deploy:** Single Railway service (`fieldbook-app`) for both frontend and backend — NestJS serves the built client (`client/dist`) as static files via `ServeStaticModule` alongside the `/api/*` routes, so there's no separate frontend host. Railway's own managed Postgres add-on is the database (not Neon). No Docker. Root `package.json` `build`/`start` scripts drive the Railway build (`npm --prefix client run build` then `npm --prefix server run build`, followed by `prisma db push` + `start:prod`). Deploy with `railway up` (or a connected git push, if/when GitHub auto-deploy is wired up).
+- **Deploy:** Single Railway service (`fieldbook-app`) serving both frontend and backend, with Railway's own managed Postgres (not Neon). No Docker. See [README.md](README.md) for local dev setup, the prod build, environment configuration, and the full Railway CLI workflow — that file is the source of truth for "how do I run/ship this," kept current on purpose.
 
 ## Architecture — three layers, nothing else
 ```
@@ -16,7 +16,7 @@ Browser (React) → REST API + JWT → NestJS → Prisma → PostgreSQL
 No Redis, no S3, no Bull/BullMQ, no Nginx, no rate limiting, no Socket.io. Max 5 concurrent users — keep it simple.
 
 ## Backend modules
-Four NestJS modules: `AuthModule`, `ClientsModule`, `VisitsModule`, `ReportsModule`. Each has its own controllers, services, and DTOs.
+Five NestJS modules: `AuthModule`, `UsersModule`, `ClientsModule`, `VisitsModule`, `ReportsModule`. Each has its own controllers, services, and DTOs.
 
 ## Roles (RBAC via NestJS guards)
 - **Executive:** logs visits, manages own clients, sees own pipeline + follow-ups
@@ -58,9 +58,10 @@ npx prisma generate             # Regenerate Prisma client
 - JavaScript only (ES modules), no TypeScript
 - File naming: kebab-case (`visit-controller.js`)
 - Use `class-validator` for DTO validation on backend
-- API routes: `/api/auth/*`, `/api/clients/*`, `/api/visits/*`, `/api/reports/*`
+- API routes: `/api/auth/*`, `/api/users/*` (admin-only), `/api/clients/*`, `/api/visits/*`, `/api/reports/*`
 - All API responses follow `{ success: true, data: ... }` or `{ success: false, error: "..." }`
 - Use Prettier for formatting, ESLint with recommended config
+- **Docs stay in sync:** any change to local dev setup, environment variables, the build process, or the Railway deployment workflow must update the matching section in [README.md](README.md) in the same change — don't let it drift.
 
 ## Phase 2 (not now)
 React Native (Android) + offline sync (Android only) + SSO (Google/Microsoft) + SMS/WhatsApp notifications + voice notes + GST validation + migrate photos to S3/R2

@@ -12,6 +12,7 @@
     "start:dev": "nodemon",
     "build": "prisma generate && babel src --out-dir dist --extensions \".js\" --copy-files",
     "start:prod": "node dist/main.js",
+    "env:prod": "dotenv -e .env.production --",
     "test": "jest",
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json"
@@ -50,6 +51,7 @@
     "@eslint/js": "^9.39.5",
     "@nestjs/testing": "^11.0.1",
     "dotenv": "^17.4.2",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^9.1.2",
     "globals": "^17.7.0",
