@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
@@ -17,6 +18,7 @@ import AddOutlined from '@mui/icons-material/AddOutlined';
 import { fetchClients } from '@/api/clients-api';
 import { DealStageChip } from '@/components/common/deal-stage-chip';
 import { ClientFormDialog } from '@/components/clients/client-form-dialog';
+import { ClientPhoto } from '@/components/clients/client-photo';
 import { PageHeader } from '@/components/common/page-header';
 import { EmptyState } from '@/components/common/empty-state';
 import { LoadingState } from '@/components/common/loading-state';
@@ -95,20 +97,25 @@ export function ClientsListPage() {
             <Card>
               <CardActionArea component={Link} to={`/clients/${client.id}`} sx={{ height: '100%' }}>
                 <CardContent>
-                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Typography variant="subtitle1" fontWeight={600} sx={{ lineHeight: 1.3 }}>
-                      {client.shopName}
-                    </Typography>
-                    <DealStageChip stage={client.dealStage} />
-                  </Stack>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                    {client.businessType} · {client.contactPerson}
-                  </Typography>
-                  <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', mt: 0.25 }}>
-                    <PhoneOutlined sx={{ fontSize: 14, color: 'text.secondary' }} />
-                    <Typography variant="caption" color="text.secondary">
-                      {client.mobile}
-                    </Typography>
+                  <Stack direction="row" spacing={1.5}>
+                    {client.hasPhoto && <ClientPhoto clientId={client.id} sx={{ width: 56, height: 56, flexShrink: 0 }} />}
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <Typography variant="subtitle1" fontWeight={600} sx={{ lineHeight: 1.3 }}>
+                          {client.shopName}
+                        </Typography>
+                        <DealStageChip stage={client.dealStage} />
+                      </Stack>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        {client.businessType} · {client.contactPerson}
+                      </Typography>
+                      <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', mt: 0.25 }}>
+                        <PhoneOutlined sx={{ fontSize: 14, color: 'text.secondary' }} />
+                        <Typography variant="caption" color="text.secondary">
+                          {client.mobile}
+                        </Typography>
+                      </Stack>
+                    </Box>
                   </Stack>
                   <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
                     <Typography variant="caption" color="text.secondary">

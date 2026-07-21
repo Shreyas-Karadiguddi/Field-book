@@ -64,6 +64,7 @@ model Client {
   competitorStack      Json                 @default("[]")
   dealStage            DealStage            @default(LEAD)
   quotationAmount      Float?
+  photo                Bytes?
   lat                  Float?
   lng                  Float?
   address              String?

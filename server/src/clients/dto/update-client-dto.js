@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsEnum,
@@ -43,14 +44,17 @@ export class UpdateClientDto {
   dealStage;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   quotationAmount;
 
   @IsOptional()
+  @Type(() => Number)
   @IsLatitude()
   lat;
 
   @IsOptional()
+  @Type(() => Number)
   @IsLongitude()
   lng;
 

@@ -28,6 +28,7 @@ import { SectionHeading } from '@/components/common/section-heading';
 import { LogVisitDialog } from '@/components/visits/log-visit-dialog';
 import { VisitPhoto } from '@/components/visits/visit-photo';
 import { ClientFormDialog } from '@/components/clients/client-form-dialog';
+import { ClientPhoto } from '@/components/clients/client-photo';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 export function ClientDetailPage() {
@@ -46,20 +47,23 @@ export function ClientDetailPage() {
   return (
     <Stack spacing={3}>
       <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <Box>
-          <Typography component={Link} to="/clients" variant="caption" color="text.secondary" sx={{ textDecoration: 'none' }}>
-            ← My clients
-          </Typography>
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mt: 0.5 }}>
-            <Typography variant="h5" fontWeight={600}>
-              {client.shopName}
+        <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-start' }}>
+          {client.hasPhoto && <ClientPhoto clientId={client.id} sx={{ width: 96, height: 96 }} />}
+          <Box>
+            <Typography component={Link} to="/clients" variant="caption" color="text.secondary" sx={{ textDecoration: 'none' }}>
+              ← My clients
             </Typography>
-            <DealStageChip stage={client.dealStage} />
-          </Stack>
-          <Typography variant="body2" color="text.secondary">
-            {client.businessType} · {client.address}
-          </Typography>
-        </Box>
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mt: 0.5 }}>
+              <Typography variant="h5" fontWeight={600}>
+                {client.shopName}
+              </Typography>
+              <DealStageChip stage={client.dealStage} />
+            </Stack>
+            <Typography variant="body2" color="text.secondary">
+              {client.businessType} · {client.address}
+            </Typography>
+          </Box>
+        </Stack>
         <Stack direction="row" spacing={1}>
           <Button variant="outlined" size="small" startIcon={<EditOutlined sx={{ fontSize: 16 }} />} onClick={() => setEditOpen(true)}>
             Edit

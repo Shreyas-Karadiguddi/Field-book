@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma-service';
+import { compressPhoto } from '../common/compress-photo';
 import { Role } from '../common/enums';
 
 @Injectable()
@@ -14,21 +15,28 @@ export class ClientsService {
     this.prisma = prisma;
   }
 
-  create(dto, user) {
-    return this.prisma.client.create({
+  async create(dto, photoBuffer, user) {
+    const photo = photoBuffer ? await compressPhoto(photoBuffer) : undefined;
+    const client = await this.prisma.client.create({
       data: {
         ...dto,
         competitorStack: dto.competitorStack || [],
+        photo,
         assignedExecutiveId: isExecutive(user) ? user.sub : dto.assignedExecutiveId || user.sub,
       },
     });
+
+    const { photo: _photo, ...clientWithoutPhoto } = client;
+    return { ...clientWithoutPhoto, hasPhoto: photo != null };
   }
 
-  findAll(user, filters) {
-    return this.prisma.client.findMany({
+  async findAll(user, filters) {
+    const clients = await this.prisma.client.findMany({
       where: buildClientWhere(user, filters),
       orderBy: { updatedAt: 'desc' },
     });
+
+    return clients.map(({ photo, ...client }) => ({ ...client, hasPhoto: photo != null }));
   }
 
   findExecutives() {
@@ -60,20 +68,39 @@ export class ClientsService {
     }
     assertClientAccess(client, user);
 
+    const { photo, ...clientWithoutPhoto } = client;
     return {
-      ...client,
-      visits: client.visits.map(({ photo, ...visit }) => ({ ...visit, hasPhoto: photo != null })),
+      ...clientWithoutPhoto,
+      hasPhoto: photo != null,
+      visits: client.visits.map(({ photo: visitPhoto, ...visit }) => ({ ...visit, hasPhoto: visitPhoto != null })),
     };
   }
 
-  async update(id, dto, user) {
+  async update(id, dto, photoBuffer, user) {
     const client = await this.prisma.client.findUnique({ where: { id } });
     if (!client) {
       throw new NotFoundException('Client not found');
     }
     assertClientAccess(client, user);
 
-    return this.prisma.client.update({ where: { id }, data: dto });
+    const photo = photoBuffer ? await compressPhoto(photoBuffer) : undefined;
+    const updated = await this.prisma.client.update({ where: { id }, data: { ...dto, photo } });
+
+    const { photo: _photo, ...clientWithoutPhoto } = updated;
+    return { ...clientWithoutPhoto, hasPhoto: (photo ?? client.photo) != null };
+  }
+
+  async findPhoto(id, user) {
+    const client = await this.prisma.client.findUnique({
+      where: { id },
+      select: { photo: true, assignedExecutiveId: true },
+    });
+    if (!client) {
+      throw new NotFoundException('Client not found');
+    }
+    assertClientAccess(client, user);
+
+    return client.photo;
   }
 }
 

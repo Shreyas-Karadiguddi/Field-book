@@ -28,7 +28,7 @@ database — this never touches production data.
 # Backend
 cd server
 npm install
-cp .env.example .env          # fill in DATABASE_URL for your local Postgres+PostGIS instance
+cp -n .env.example .env       # -n: won't overwrite an existing .env — fill in DATABASE_URL for your local Postgres+PostGIS instance
 npx prisma generate
 npx prisma db push            # sync schema to your local DB
 npm run start:dev             # http://localhost:4000/api (nodemon, hot reload)
@@ -41,6 +41,13 @@ npm run dev                   # http://localhost:5173 (Vite, hot reload)
 
 `server/.env` is git-ignored and is only ever read by commands you run locally — it has no effect
 on the deployed app (see [Environment configuration](#environment-configuration) below).
+
+⚠️ Once `server/.env` has real values, never re-run `cp .env.example .env` (without `-n`) — it
+overwrites it silently with the placeholder `user:password@localhost:5432` and breaks `prisma db
+push` with a `P1000 Authentication failed` error. If that happens, put your real `DATABASE_URL`
+back (ask a teammate, or check `psql` / your Postgres client for the actual port/user — this repo's
+dev Postgres has historically run on `127.0.0.1:5433` with user `postgres` and no password, not the
+default `5432`).
 
 ## Building for production
 

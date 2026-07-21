@@ -19,7 +19,9 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import PlaceOutlined from '@mui/icons-material/PlaceOutlined';
 import RefreshOutlined from '@mui/icons-material/RefreshOutlined';
-import { createClient, updateClient, fetchExecutives } from '@/api/clients-api';
+import PhotoCameraOutlined from '@mui/icons-material/PhotoCameraOutlined';
+import CloseOutlined from '@mui/icons-material/CloseOutlined';
+import { createClient, updateClient, fetchExecutives, fetchClientPhotoUrl } from '@/api/clients-api';
 import { useAuthStore } from '@/store/auth-store';
 
 const DEAL_STAGES = ['LEAD', 'HOT', 'WON', 'LOST'];
@@ -86,6 +88,8 @@ export function ClientFormDialog({ open, onClose, client, onSaved }) {
   const [gps, setGps] = useState(null);
   const [gpsError, setGpsError] = useState(null);
   const [gpsLoading, setGpsLoading] = useState(false);
+  const [photo, setPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
 
   const { data: executives = [] } = useQuery({
     queryKey: ['clients', 'executives'],
@@ -108,6 +112,7 @@ export function ClientFormDialog({ open, onClose, client, onSaved }) {
     if (!open) return;
     reset(client ? valuesFromClient(client) : emptyValues());
     setCompetitorStack(client?.competitorStack || []);
+    setPhoto(null);
 
     if (client) {
       setGps(client.lat && client.lng ? { lat: client.lat, lng: client.lng } : null);
@@ -117,6 +122,24 @@ export function ClientFormDialog({ open, onClose, client, onSaved }) {
       setGpsError(null);
       captureLocation();
     }
+
+    let cancelled = false;
+    let objectUrl;
+    setPhotoPreview(null);
+    if (client?.hasPhoto) {
+      fetchClientPhotoUrl(client.id).then((url) => {
+        if (cancelled) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        objectUrl = url;
+        setPhotoPreview(url);
+      });
+    }
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, client]);
 
@@ -138,6 +161,20 @@ export function ClientFormDialog({ open, onClose, client, onSaved }) {
       },
       { enableHighAccuracy: true, timeout: 8000 },
     );
+  }
+
+  function handlePhotoChange(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  }
+
+  function clearPhoto() {
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhoto(null);
+    setPhotoPreview(null);
   }
 
   const mutation = useMutation({
@@ -164,6 +201,7 @@ export function ClientFormDialog({ open, onClose, client, onSaved }) {
       competitorStack,
       lat: gps?.lat,
       lng: gps?.lng,
+      photo,
       ...(canReassign ? { assignedExecutiveId: values.assignedExecutiveId || undefined } : {}),
     });
   }
@@ -288,6 +326,30 @@ export function ClientFormDialog({ open, onClose, client, onSaved }) {
                 <RefreshOutlined sx={{ fontSize: 16 }} />
               </IconButton>
             </Stack>
+
+            <Box>
+              <Button component="label" size="small" variant="outlined" startIcon={<PhotoCameraOutlined sx={{ fontSize: 16 }} />}>
+                {photoPreview ? 'Replace photo' : 'Attach photo'}
+                <input type="file" accept="image/*" capture="environment" hidden onChange={handlePhotoChange} />
+              </Button>
+              {photoPreview && (
+                <Box sx={{ mt: 1.5, position: 'relative', display: 'inline-block' }}>
+                  <Box
+                    component="img"
+                    src={photoPreview}
+                    alt="Shop"
+                    sx={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 1, display: 'block' }}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={clearPhoto}
+                    sx={{ position: 'absolute', top: -8, right: -8, bgcolor: 'background.paper', boxShadow: 1, '&:hover': { bgcolor: 'background.paper' } }}
+                  >
+                    <CloseOutlined sx={{ fontSize: 14 }} />
+                  </IconButton>
+                </Box>
+              )}
+            </Box>
 
             {canReassign && (
               <Controller
