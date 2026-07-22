@@ -8,7 +8,6 @@ import { ClientsListPage } from '@/pages/clients-list-page';
 import { ClientDetailPage } from '@/pages/client-detail-page';
 import { VisitsPage } from '@/pages/visits-page';
 import { FollowUpsPage } from '@/pages/follow-ups-page';
-import { AreaMapPage } from '@/pages/area-map-page';
 import { PipelinePage } from '@/pages/pipeline-page';
 import { PerformancePage } from '@/pages/performance-page';
 import { UsersPage } from '@/pages/users-page';
@@ -26,7 +25,6 @@ function App() {
             <Route path="/clients/:id" element={<ClientDetailPage />} />
             <Route path="/visits" element={<VisitsPage />} />
             <Route path="/follow-ups" element={<FollowUpsPage />} />
-            <Route path="/area-map" element={<AreaMapPage />} />
             <Route path="/reports/performance" element={<PerformancePage />} />
             <Route path="/reports/pipeline" element={<PipelinePage />} />
             <Route element={<ProtectedRoute roles={['ADMIN']} />}>

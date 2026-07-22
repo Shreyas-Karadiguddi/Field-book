@@ -20,6 +20,8 @@ import CallOutlined from '@mui/icons-material/CallOutlined';
 import StorefrontOutlined from '@mui/icons-material/StorefrontOutlined';
 import ReceiptLongOutlined from '@mui/icons-material/ReceiptLongOutlined';
 import AccountBalanceWalletOutlined from '@mui/icons-material/AccountBalanceWalletOutlined';
+import PersonAddOutlined from '@mui/icons-material/PersonAddOutlined';
+import BadgeOutlined from '@mui/icons-material/BadgeOutlined';
 import { fetchClient } from '@/api/clients-api';
 import { DealStageChip } from '@/components/common/deal-stage-chip';
 import { EmptyState } from '@/components/common/empty-state';
@@ -79,6 +81,8 @@ export function ClientDetailPage() {
         <InfoTile icon={PhoneOutlined} label="Mobile" value={client.mobile} />
         <InfoTile icon={ReceiptLongOutlined} label="GST" value={client.gstNumber || '—'} />
         <InfoTile icon={AccountBalanceWalletOutlined} label="Pipeline" value={formatCurrency(client.quotationAmount)} />
+        <InfoTile icon={PersonAddOutlined} label="Added by" value={client.createdBy?.name || '—'} />
+        <InfoTile icon={BadgeOutlined} label="Assigned to" value={client.assignedExecutive?.name || '—'} />
       </Grid>
 
       <Grid container spacing={3}>
@@ -102,6 +106,7 @@ export function ClientDetailPage() {
                       </Stack>
                       <Typography variant="caption" color="text.secondary">
                         {formatDate(visit.visitedAt)}
+                        {visit.executive?.name ? ` · ${visit.executive.name}` : ''}
                       </Typography>
                     </Stack>
                     {visit.hasPhoto && <VisitPhoto visitId={visit.id} sx={{ mb: 1.5 }} />}
@@ -137,9 +142,16 @@ export function ClientDetailPage() {
                     {client.followUps.map((fu) => (
                       <Stack key={fu.id} direction="row" spacing={2} sx={{ justifyContent: 'space-between' }}>
                         <Typography variant="body2">{fu.notes}</Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-                          {formatDate(fu.dueDate)}
-                        </Typography>
+                        <Stack sx={{ alignItems: 'flex-end', flexShrink: 0 }}>
+                          <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                            {formatDate(fu.dueDate)}
+                          </Typography>
+                          {fu.executive?.name && (
+                            <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                              {fu.executive.name}
+                            </Typography>
+                          )}
+                        </Stack>
                       </Stack>
                     ))}
                   </Stack>

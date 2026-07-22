@@ -17,17 +17,27 @@ import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
+import CircularProgress from '@mui/material/CircularProgress';
 import PlaceOutlined from '@mui/icons-material/PlaceOutlined';
 import RefreshOutlined from '@mui/icons-material/RefreshOutlined';
+import ClearOutlined from '@mui/icons-material/ClearOutlined';
 import PhotoCameraOutlined from '@mui/icons-material/PhotoCameraOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import { createClient, updateClient, fetchExecutives, fetchClientPhotoUrl } from '@/api/clients-api';
+import { searchAddress, reverseGeocode } from '@/api/geocode-api';
 import { useAuthStore } from '@/store/auth-store';
 
 const DEAL_STAGES = ['LEAD', 'HOT', 'WON', 'LOST'];
 const SOFTWARE_RELATIONSHIPS = ['PROSPECT', 'UPGRADE', 'RENEWAL'];
 const BUSINESS_TYPES = ['Retail', 'F&B', 'Club', 'Industrial'];
 const COMPETITOR_OPTIONS = ['Tally Prime', 'Marg ERP', 'Zoho Books', 'Vyapar', 'SAP Business One'];
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
+  'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh',
+  'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan',
+  'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+  'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Chandigarh', 'Puducherry',
+];
 
 const clientSchema = z.object({
   shopName: z.string().min(1, 'Required'),
@@ -43,6 +53,8 @@ const clientSchema = z.object({
     .refine((val) => !val || (!Number.isNaN(Number(val)) && Number(val) >= 0), { message: 'Enter a valid amount' }),
   address: z.string().optional(),
   area: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
   assignedExecutiveId: z.string().optional(),
 });
 
@@ -58,6 +70,8 @@ function emptyValues() {
     quotationAmount: '',
     address: '',
     area: '',
+    city: '',
+    state: '',
     assignedExecutiveId: '',
   };
 }
@@ -74,6 +88,8 @@ function valuesFromClient(client) {
     quotationAmount: client.quotationAmount != null ? String(client.quotationAmount) : '',
     address: client.address || '',
     area: client.area || '',
+    city: client.city || '',
+    state: client.state || '',
     assignedExecutiveId: client.assignedExecutiveId || '',
   };
 }
@@ -85,11 +101,14 @@ export function ClientFormDialog({ open, onClose, client, onSaved }) {
   const canReassign = isEdit && (user?.role === 'MANAGER' || user?.role === 'ADMIN');
 
   const [competitorStack, setCompetitorStack] = useState([]);
-  const [gps, setGps] = useState(null);
+  const [gps, setGps] = useState(null); // { lat, lng, source: 'device' | 'address' }
   const [gpsError, setGpsError] = useState(null);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [addressInput, setAddressInput] = useState('');
+  const [addressOptions, setAddressOptions] = useState([]);
+  const [addressLoading, setAddressLoading] = useState(false);
 
   const { data: executives = [] } = useQuery({
     queryKey: ['clients', 'executives'],
@@ -102,6 +121,8 @@ export function ClientFormDialog({ open, onClose, client, onSaved }) {
     register,
     handleSubmit,
     reset,
+    setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(clientSchema),
@@ -113,9 +134,11 @@ export function ClientFormDialog({ open, onClose, client, onSaved }) {
     reset(client ? valuesFromClient(client) : emptyValues());
     setCompetitorStack(client?.competitorStack || []);
     setPhoto(null);
+    setAddressInput(client?.address || '');
+    setAddressOptions([]);
 
     if (client) {
-      setGps(client.lat && client.lng ? { lat: client.lat, lng: client.lng } : null);
+      setGps(client.lat && client.lng ? { lat: client.lat, lng: client.lng, source: 'device' } : null);
       setGpsError(null);
     } else {
       setGps(null);
@@ -143,6 +166,24 @@ export function ClientFormDialog({ open, onClose, client, onSaved }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, client]);
 
+  useEffect(() => {
+    if (!open || addressInput.trim().length < 3) {
+      return undefined;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      setAddressLoading(true);
+      searchAddress(addressInput, controller.signal)
+        .then((results) => setAddressOptions(results))
+        .catch(() => {})
+        .finally(() => setAddressLoading(false));
+    }, 500);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [open, addressInput]);
+
   function captureLocation() {
     if (!navigator.geolocation) {
       setGpsError('Geolocation not supported on this device');
@@ -152,8 +193,10 @@ export function ClientFormDialog({ open, onClose, client, onSaved }) {
     setGpsError(null);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setGps({ lat: position.coords.latitude, lng: position.coords.longitude });
+        const { latitude, longitude } = position.coords;
+        setGps({ lat: latitude, lng: longitude, source: 'device' });
         setGpsLoading(false);
+        fillAddressFromCoords(latitude, longitude);
       },
       () => {
         setGpsError('Could not get your location');
@@ -161,6 +204,36 @@ export function ClientFormDialog({ open, onClose, client, onSaved }) {
       },
       { enableHighAccuracy: true, timeout: 8000 },
     );
+  }
+
+  function fillAddressFromCoords(lat, lng) {
+    setAddressLoading(true);
+    reverseGeocode(lat, lng)
+      .then((result) => {
+        if (!result) return;
+        const current = getValues();
+        if (!current.address && result.address) {
+          setValue('address', result.address, { shouldValidate: true });
+          setAddressInput(result.address);
+        }
+        if (!current.area && result.area) setValue('area', result.area);
+        if (!current.city && result.city) setValue('city', result.city);
+        if (!current.state && result.state) setValue('state', result.state);
+      })
+      .catch(() => {})
+      .finally(() => setAddressLoading(false));
+  }
+
+  function selectAddressSuggestion(suggestion) {
+    setValue('address', suggestion.address, { shouldValidate: true });
+    setAddressInput(suggestion.address);
+    if (suggestion.area) setValue('area', suggestion.area);
+    if (suggestion.city) setValue('city', suggestion.city);
+    if (suggestion.state) setValue('state', suggestion.state);
+    if (suggestion.lat && suggestion.lng) {
+      setGps({ lat: suggestion.lat, lng: suggestion.lng, source: 'address' });
+      setGpsError(null);
+    }
   }
 
   function handlePhotoChange(event) {
@@ -198,6 +271,8 @@ export function ClientFormDialog({ open, onClose, client, onSaved }) {
       quotationAmount: values.quotationAmount ? Number(values.quotationAmount) : undefined,
       address: values.address || undefined,
       area: values.area || undefined,
+      city: values.city || undefined,
+      state: values.state || undefined,
       competitorStack,
       lat: gps?.lat,
       lng: gps?.lng,
@@ -312,19 +387,93 @@ export function ClientFormDialog({ open, onClose, client, onSaved }) {
               renderInput={(params) => <TextField {...params} label="Competitor stack" size="small" />}
             />
 
+            <Controller
+              control={control}
+              name="address"
+              render={({ field }) => (
+                <Autocomplete
+                  freeSolo
+                  fullWidth
+                  filterOptions={(x) => x}
+                  options={addressInput.trim().length < 3 ? [] : addressOptions}
+                  loading={addressLoading}
+                  inputValue={addressInput}
+                  getOptionLabel={(option) => (typeof option === 'string' ? option : option.label)}
+                  onInputChange={(_, next, reason) => {
+                    setAddressInput(next);
+                    if (reason === 'input') field.onChange(next);
+                  }}
+                  onChange={(_, next) => {
+                    if (next && typeof next === 'object') {
+                      selectAddressSuggestion(next);
+                    }
+                  }}
+                  renderOption={(props, option) => (
+                    <Box component="li" {...props} key={option.label}>
+                      <Typography variant="body2">{option.label}</Typography>
+                    </Box>
+                  )}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Address"
+                      size="small"
+                      helperText="Type a full address, or just a city/area if that's all you have"
+                      slotProps={{
+                        ...params.slotProps,
+                        input: {
+                          ...params.slotProps.input,
+                          endAdornment: (
+                            <>
+                              {addressLoading ? <CircularProgress color="inherit" size={14} /> : null}
+                              {params.slotProps.input.endAdornment}
+                            </>
+                          ),
+                        },
+                      }}
+                    />
+                  )}
+                />
+              )}
+            />
+
             <Stack direction="row" spacing={2}>
-              <TextField label="Address" fullWidth size="small" {...register('address')} />
-              <TextField label="Area" fullWidth size="small" {...register('area')} />
+              <TextField label="Area / locality" fullWidth size="small" {...register('area')} />
+              <TextField label="City" fullWidth size="small" {...register('city')} />
+              <Controller
+                control={control}
+                name="state"
+                render={({ field }) => (
+                  <Autocomplete
+                    freeSolo
+                    fullWidth
+                    options={INDIAN_STATES}
+                    value={field.value}
+                    onChange={(_, next) => field.onChange(next || '')}
+                    onInputChange={(_, next) => field.onChange(next)}
+                    renderInput={(params) => <TextField {...params} label="State" size="small" />}
+                  />
+                )}
+              />
             </Stack>
 
             <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
               <PlaceOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
               <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-                {gpsLoading ? 'Getting location…' : gps ? `${gps.lat.toFixed(4)}, ${gps.lng.toFixed(4)}` : gpsError || 'Location not captured'}
+                {gpsLoading
+                  ? 'Getting location…'
+                  : gps
+                    ? `${gps.lat.toFixed(4)}, ${gps.lng.toFixed(4)} (${gps.source === 'address' ? 'approximate, from address' : 'exact, from device GPS'})`
+                    : gpsError || "No exact location — that's fine, area/city/state below will still let it be found"}
               </Typography>
-              <IconButton size="small" onClick={captureLocation} disabled={gpsLoading}>
+              <IconButton size="small" onClick={captureLocation} disabled={gpsLoading} title="Use current device location">
                 <RefreshOutlined sx={{ fontSize: 16 }} />
               </IconButton>
+              {gps && (
+                <IconButton size="small" onClick={() => setGps(null)} title="Clear location">
+                  <ClearOutlined sx={{ fontSize: 16 }} />
+                </IconButton>
+              )}
             </Stack>
 
             <Box>

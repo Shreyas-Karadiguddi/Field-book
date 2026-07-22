@@ -68,5 +68,13 @@ export class UpdateClientDto {
 
   @IsOptional()
   @IsString()
+  city;
+
+  @IsOptional()
+  @IsString()
+  state;
+
+  @IsOptional()
+  @IsString()
   assignedExecutiveId;
 }

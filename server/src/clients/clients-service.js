@@ -23,6 +23,7 @@ export class ClientsService {
         competitorStack: dto.competitorStack || [],
         photo,
         assignedExecutiveId: isExecutive(user) ? user.sub : dto.assignedExecutiveId || user.sub,
+        createdById: user.sub,
       },
     });
 
@@ -58,8 +59,12 @@ export class ClientsService {
             executive: { select: { id: true, name: true, email: true, role: true, area: true } },
           },
         },
-        followUps: { orderBy: { dueDate: 'asc' } },
+        followUps: {
+          orderBy: { dueDate: 'asc' },
+          include: { executive: { select: { id: true, name: true } } },
+        },
         assignedExecutive: { select: { id: true, name: true, email: true, role: true, area: true } },
+        createdBy: { select: { id: true, name: true, email: true, role: true } },
       },
     });
 
@@ -108,10 +113,12 @@ function isExecutive(user) {
   return user.role === Role.EXECUTIVE;
 }
 
-function buildClientWhere(user, { area, dealStage } = {}) {
+function buildClientWhere(user, { area, city, state, dealStage } = {}) {
   return {
     ...(isExecutive(user) ? { assignedExecutiveId: user.sub } : {}),
-    ...(area ? { area } : {}),
+    ...(area ? { area: { equals: area, mode: 'insensitive' } } : {}),
+    ...(city ? { city: { equals: city, mode: 'insensitive' } } : {}),
+    ...(state ? { state: { equals: state, mode: 'insensitive' } } : {}),
     ...(dealStage ? { dealStage } : {}),
   };
 }

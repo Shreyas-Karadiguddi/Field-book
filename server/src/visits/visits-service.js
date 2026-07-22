@@ -112,7 +112,7 @@ export class VisitsService {
     return this.prisma.followUp.findMany({
       where: buildFollowUpWhere(user, filters),
       orderBy: { dueDate: 'asc' },
-      include: { client: true },
+      include: { client: true, executive: { select: { id: true, name: true } } },
     });
   }
 

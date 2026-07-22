@@ -46,9 +46,10 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  clients   Client[]   @relation("AssignedExecutive")
-  visits    Visit[]
-  followUps FollowUp[]
+  clients        Client[]   @relation("AssignedExecutive")
+  createdClients Client[]   @relation("ClientCreatedBy")
+  visits         Visit[]
+  followUps      FollowUp[]
 
   @@map("users")
 }
@@ -69,8 +70,12 @@ model Client {
   lng                  Float?
   address              String?
   area                 String?
+  city                 String?
+  state                String?
   assignedExecutiveId  String
   assignedExecutive    User                 @relation("AssignedExecutive", fields: [assignedExecutiveId], references: [id])
+  createdById          String
+  createdBy            User                 @relation("ClientCreatedBy", fields: [createdById], references: [id])
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 

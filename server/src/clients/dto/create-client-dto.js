@@ -62,4 +62,12 @@ export class CreateClientDto {
   @IsOptional()
   @IsString()
   area;
+
+  @IsOptional()
+  @IsString()
+  city;
+
+  @IsOptional()
+  @IsString()
+  state;
 }

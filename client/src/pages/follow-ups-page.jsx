@@ -11,6 +11,7 @@ import ErrorOutlineOutlined from '@mui/icons-material/ErrorOutlineOutlined';
 import TodayOutlined from '@mui/icons-material/TodayOutlined';
 import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined';
 import { fetchFollowUps } from '@/api/visits-api';
+import { useAuthStore } from '@/store/auth-store';
 import { PageHeader } from '@/components/common/page-header';
 import { LoadingState } from '@/components/common/loading-state';
 import { formatDate } from '@/lib/format';
@@ -37,6 +38,8 @@ const GROUP_META = {
 };
 
 export function FollowUpsPage() {
+  const user = useAuthStore((state) => state.user);
+  const isExecutive = user?.role === 'EXECUTIVE';
   const { data: followUps = [], isLoading } = useQuery({
     queryKey: ['follow-ups'],
     queryFn: () => fetchFollowUps(),
@@ -53,7 +56,14 @@ export function FollowUpsPage() {
       <Stack spacing={4}>
         {Object.entries(groups).map(([key, items]) =>
           items.length > 0 ? (
-            <FollowUpGroup key={key} title={GROUP_META[key].title} color={GROUP_META[key].color} icon={GROUP_META[key].icon} items={items} />
+            <FollowUpGroup
+              key={key}
+              title={GROUP_META[key].title}
+              color={GROUP_META[key].color}
+              icon={GROUP_META[key].icon}
+              items={items}
+              showExecutive={!isExecutive}
+            />
           ) : null,
         )}
       </Stack>
@@ -61,7 +71,7 @@ export function FollowUpsPage() {
   );
 }
 
-function FollowUpGroup({ title, color, icon: Icon, items }) {
+function FollowUpGroup({ title, color, icon: Icon, items, showExecutive }) {
   return (
     <Stack spacing={1}>
       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', color }}>
@@ -84,9 +94,16 @@ function FollowUpGroup({ title, color, icon: Icon, items }) {
                       {fu.notes}
                     </Typography>
                   </Box>
-                  <Typography variant="caption" color="text.secondary">
-                    {formatDate(fu.dueDate)}
-                  </Typography>
+                  <Stack sx={{ alignItems: 'flex-end', flexShrink: 0 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                      {formatDate(fu.dueDate)}
+                    </Typography>
+                    {showExecutive && fu.executive?.name && (
+                      <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                        {fu.executive.name}
+                      </Typography>
+                    )}
+                  </Stack>
                 </Stack>
               </CardContent>
             </CardActionArea>
